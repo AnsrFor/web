@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>待办事项列表</title>
+    <link type="text/css" rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css"/>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form role="form" class="form form-inline">
+                    <div class="form-group">
+                        <label>序号</label>
+                        <input class="form-control" type="text" name="id" v-model="todo.id" />
+                        <br/>
+                    </div>
+                    <br/>
+                    <br/>
+                    <div class="form-group">
+                        <label>待办事项</label>
+                        <br/>
+                        <textarea class="form-control" name="content" v-model="todo.content" cols="50" rows="5"></textarea>
+                        <br/>
+                        <br/>
+                    </div>
+                    <br/>
+                    <button type="button" class="btn btn-primary" v-on:click="save()">保存</button>
+                </form>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table">
+                        <tr>
+                            <th>序号</th>
+                            <th>内容</th>
+                        </tr>
+                        <tr v-for="item in listdata">
+                            <td>{{item.id}}</td>
+                            <td>{{item.content}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    var vue = new Vue({
+        el:'#app',
+        data:{
+            listdata:[],
+            todo:{
+                id:'',
+                content:''
+            }
+        },
+        methods:{
+            init:function(){
+                axios.get('/todo?action=listjson').then(function (result) {
+                    console.log(result);
+                    if(result.status==200){
+                        vue.listdata=result.data;
+                    }else{
+                        alert('请求数据异常');
+                    }
+                }).catch(function (err) {
+                    alert('服务器异常');
+                });
+            },
+            save:function(){
+                var param = '';
+                //键值对方式参数
+                param = 'id='+this.todo.id+'&content='+this.todo.content;
+                axios.post('/todo?action=save',param).then(function(result){
+                   if(result.status==200){
+                       alert('保存成功');
+                       var tmp = {};
+                       tmp.id = vue.todo.id;
+                       tmp.content = vue.todo.content;
+                       vue.listdata.push(tmp);
+                       vue.todo.id='';
+                       vue.todo.content='';
+                   }
+                }).catch(function(err){
+                    alert('服务器异常');
+                });
+            }
+        },
+        mounted:function () {
+            console.log('inited');
+            this.init();
+        }
+    });
+</script>
